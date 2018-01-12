@@ -52,7 +52,7 @@ open class FloatyManager: NSObject {
         }
     }
     
-    private var _font = UIFont()
+    private var _font = UIFont.systemFont(ofSize: 15)
     open var font: UIFont {
         get {
             return _font
