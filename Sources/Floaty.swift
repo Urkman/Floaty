@@ -85,7 +85,12 @@ open class Floaty: UIView {
             self.setNeedsDisplay()
         }
     }
-    
+
+    /**
+     Image only button
+     */
+    @IBInspectable open var imageOnlyButton: Bool = false
+
     /**
      Plus icon color inside button.
      */
@@ -162,7 +167,7 @@ open class Floaty: UIView {
             return FloatyManager.defaultInstance()
         }
     }
-    
+
     /**
      Delegate that can be used to learn more about the behavior of the FAB widget.
      */
@@ -613,7 +618,7 @@ open class Floaty: UIView {
     fileprivate func setCircleLayer() {
         circleLayer.removeFromSuperlayer()
         circleLayer.frame = CGRect(x: 0, y: 0, width: size, height: size)
-        circleLayer.backgroundColor = buttonColor.cgColor
+        circleLayer.backgroundColor = imageOnlyButton ? UIColor.clear.cgColor : buttonColor.cgColor
         circleLayer.cornerRadius = size/2
         layer.addSublayer(circleLayer)
     }
@@ -632,19 +637,29 @@ open class Floaty: UIView {
         buttonImageView.removeFromSuperview()
         buttonImageView = UIImageView(image: buttonImage)
         buttonImageView.tintColor = plusColor
-        buttonImageView.frame = CGRect(
-            x: circleLayer.frame.origin.x + (size / 2 - buttonImageView.frame.size.width / 2),
-            y: circleLayer.frame.origin.y + (size / 2 - buttonImageView.frame.size.height / 2),
-            width: buttonImageView.frame.size.width,
-            height: buttonImageView.frame.size.height
-        )
+        
+        if imageOnlyButton {
+            buttonImageView.frame = CGRect(
+                x: 0,
+                y: 0,
+                width: circleLayer.frame.size.width,
+                height: circleLayer.frame.size.height
+            )
+        } else {
+            buttonImageView.frame = CGRect(
+                x: circleLayer.frame.origin.x + (size / 2 - buttonImageView.frame.size.width / 2),
+                y: circleLayer.frame.origin.y + (size / 2 - buttonImageView.frame.size.height / 2),
+                width: buttonImageView.frame.size.width,
+                height: buttonImageView.frame.size.height
+            )
+        }
         
         addSubview(buttonImageView)
     }
     
     fileprivate func setTintLayer() {
         tintLayer.frame = CGRect(x: circleLayer.frame.origin.x, y: circleLayer.frame.origin.y, width: size, height: size)
-        tintLayer.backgroundColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        tintLayer.backgroundColor = imageOnlyButton ? UIColor.clear.cgColor : UIColor.white.withAlphaComponent(0.2).cgColor
         tintLayer.cornerRadius = size/2
         layer.addSublayer(tintLayer)
     }
