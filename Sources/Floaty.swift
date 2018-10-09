@@ -162,7 +162,7 @@ open class Floaty: UIView {
     
     open var sticky: Bool = false
     
-    open static var global: FloatyManager {
+    public static var global: FloatyManager {
         get {
             return FloatyManager.defaultInstance()
         }
@@ -290,15 +290,15 @@ open class Floaty: UIView {
             
             setOverlayView()
             self.superview?.insertSubview(overlayView, aboveSubview: self)
-            self.superview?.bringSubview(toFront: self)
-            overlayView.addTarget(self, action: #selector(close), for: UIControlEvents.touchUpInside)
+            self.superview?.bringSubviewToFront(self)
+            overlayView.addTarget(self, action: #selector(close), for: UIControl.Event.touchUpInside)
             
             overlayViewDidCompleteOpenAnimation = false
             animationGroup.enter()
             UIView.animate(withDuration: 0.3, delay: 0,
                            usingSpringWithDamping: 0.55,
                            initialSpringVelocity: 0.3,
-                           options: UIViewAnimationOptions(), animations: { () -> Void in
+                           options: UIView.AnimationOptions(), animations: { () -> Void in
                             self.plusLayer.transform = CATransform3DMakeRotation(self.degreesToRadians(self.rotationDegrees), 0.0, 0.0, 1.0)
                             self.buttonImageView.transform = CGAffineTransform(rotationAngle: self.degreesToRadians(self.rotationDegrees))
                             self.overlayView.alpha = 1
@@ -338,7 +338,7 @@ open class Floaty: UIView {
         let animationGroup = DispatchGroup()
         
         if(items.count > 0){
-            self.overlayView.removeTarget(self, action: #selector(close), for: UIControlEvents.touchUpInside)
+            self.overlayView.removeTarget(self, action: #selector(close), for: UIControl.Event.touchUpInside)
             animationGroup.enter()
             UIView.animate(withDuration: 0.3, delay: 0,
                            usingSpringWithDamping: 0.6,
@@ -626,7 +626,7 @@ open class Floaty: UIView {
     fileprivate func setPlusLayer() {
         plusLayer.removeFromSuperlayer()
         plusLayer.frame = CGRect(x: 0, y: 0, width: size, height: size)
-        plusLayer.lineCap = kCALineCapRound
+        plusLayer.lineCap = CAShapeLayerLineCap.round
         plusLayer.strokeColor = plusColor.cgColor
         plusLayer.lineWidth = 2.0
         plusLayer.path = plusBezierPath().cgPath
@@ -780,15 +780,16 @@ open class Floaty: UIView {
     }
     
     fileprivate func setObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChange(_:)), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name:NSNotification.Name.UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name:NSNotification.Name.UIKeyboardWillHide, object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChange(_:)), name: UIDevice.orientationDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIWindow.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name:UIWindow.keyboardWillHideNotification, object: nil)
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
-        NotificationCenter.default.removeObserver(self, name:NSNotification.Name.UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name:NSNotification.Name.UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIWindow.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIWindow.keyboardWillHideNotification, object: nil)
     }
     
     open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -856,7 +857,7 @@ open class Floaty: UIView {
     }
     
     @objc internal func deviceOrientationDidChange(_ notification: Notification) {
-        guard let keyboardSize: CGFloat = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size.height else {
+        guard let keyboardSize: CGFloat = (notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size.height else {
             return
         }
         
@@ -871,7 +872,7 @@ open class Floaty: UIView {
     }
     
     @objc internal func keyboardWillShow(_ notification: Notification) {
-        guard let keyboardSize: CGFloat = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.size.height,
+        guard let keyboardSize: CGFloat = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.size.height,
             respondsToKeyboard, !sticky else {
                 return
         }
@@ -882,7 +883,7 @@ open class Floaty: UIView {
             size = min(frame.size.width, frame.size.height)
         }
         
-        UIView.animate(withDuration: 0.2, delay: 0, options: UIViewAnimationOptions(), animations: {
+        UIView.animate(withDuration: 0.2, delay: 0, options: UIView.AnimationOptions(), animations: {
             self.frame = CGRect(
                 x: UIScreen.main.bounds.width-self.size - self.paddingX,
                 y: UIScreen.main.bounds.height-self.size - keyboardSize - self.paddingY,
@@ -897,7 +898,7 @@ open class Floaty: UIView {
             return
         }
         
-        UIView.animate(withDuration: 0.2, delay: 0, options: UIViewAnimationOptions(), animations: {
+        UIView.animate(withDuration: 0.2, delay: 0, options: UIView.AnimationOptions(), animations: {
             if self.isCustomFrame == false {
                 self.setBottomFrameAccordingToRTL()
             } else {
@@ -935,7 +936,7 @@ extension Floaty {
             UIView.animate(withDuration: 0.3, delay: delay,
                            usingSpringWithDamping: 0.55,
                            initialSpringVelocity: 0.3,
-                           options: UIViewAnimationOptions(), animations: { () -> Void in
+                           options: UIView.AnimationOptions(), animations: { () -> Void in
                             item.layer.transform = CATransform3DIdentity
                             item.alpha = 1
             }, completion: { _ in
@@ -1025,7 +1026,7 @@ extension Floaty {
             UIView.animate(withDuration: 0.3, delay: delay,
                            usingSpringWithDamping: 0.55,
                            initialSpringVelocity: 0.3,
-                           options: UIViewAnimationOptions(), animations: { () -> Void in
+                           options: UIView.AnimationOptions(), animations: { () -> Void in
                             item.frame.origin.x = self.size/2 - self.itemSize/2
                             item.alpha = 1
             }, completion: { _ in
